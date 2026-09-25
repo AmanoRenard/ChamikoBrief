@@ -1,0 +1,42 @@
+{
+  "name": "chamiko-brief",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "predev": "node scripts/prepare-brief.mjs",
+    "build": "next build",
+    "prebuild": "node scripts/prepare-brief.mjs && node scripts/clean-out.mjs",
+    "postbuild": "node scripts/check-export.mjs",
+    "prepare-brief": "node scripts/prepare-brief.mjs",
+    "times": "node scripts/prepare-brief.mjs --times-only",
+    "hooks:install": "git config core.hooksPath .githooks",
+    "clean": "node scripts/clean-out.mjs",
+    "preview": "npx --yes serve out -l 4000",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "dompurify": "^3.4.16",
+    "framer-motion": "^11.2.10",
+    "lucide-react": "^0.400.0",
+    "marked": "^18.0.14",
+    "next": "14.2.29",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.5.5",
+    "tailwindcss-animate": "^1.0.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.2",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "14.2.29",
+    "postcss": "^8.4.38",
+    "sharp": "^0.35.4",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.4.5"
+  }
+}

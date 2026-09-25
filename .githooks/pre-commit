@@ -1,0 +1,35 @@
+#!/bin/sh
+# ChamikoBrief pre-commit 钩子
+#
+# 作用：提交前把素材的「本机修改时间」写进 materials-times.json，并纳入本次提交。
+# 原因：git 只保存文件内容、不保存修改时间。仓库被 clone 到构建机（如 Vercel）后，
+#       所有文件的 mtime 都会变成「检出那一刻」，卡片日期与「最新上传」排序会全部相同。
+#       详见 scripts/material-times.mjs。
+#
+# 安装：npm run hooks:install（等价于 git config core.hooksPath .githooks，只影响本仓库）
+# 原则：永不阻塞提交 —— 任何异常都直接放行，最差只是那批素材显示为提交时间。
+
+set -u
+
+# 这个提交没有改动素材，直接放行（不加判断的话每次提交都要遍历一遍 public）
+if ! git diff --cached --name-only -- public | grep -q .; then
+  exit 0
+fi
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "[pre-commit] 未找到 node，跳过素材时间同步（该批素材将显示为提交时间）" >&2
+  exit 0
+fi
+
+if ! node scripts/prepare-brief.mjs --times-only; then
+  echo "[pre-commit] 素材时间同步失败，已跳过（不影响本次提交）" >&2
+  exit 0
+fi
+
+git add -- materials-times.json 2>/dev/null || true
+
+if git diff --cached --name-only -- materials-times.json | grep -q .; then
+  echo "[pre-commit] 已记录素材时间并纳入本次提交：materials-times.json"
+fi
+
+exit 0

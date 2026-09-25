@@ -1,0 +1,40 @@
+# ============================================================
+# .gitignore
+# 规则一律用「/ 开头」锚定到仓库根，绝不使用 *.log / data/ 这类
+# 无锚定通配，否则 public/ 里的素材（如 notes.log、data/ 目录）
+# 会被静默忽略，且父目录被排除后无法用 ! 反选回来。
+# ============================================================
+
+# ---- 依赖与构建产物 ----
+/node_modules/
+/.next/
+/out/
+*.tsbuildinfo
+/.eslintcache
+
+# ---- 构建期生成，不进仓库 ----
+/src/generated/
+/public/__brief/
+
+# ---- 日志（仅仓库根）----
+/logs/
+/*.log
+/npm-debug.log*
+/yarn-error.log*
+/pnpm-debug.log*
+/server.log
+/next-dev.log
+
+# ---- 环境变量 ----
+.env
+.env.local
+.env.*.local
+
+# ---- 编辑器 / 系统 ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# ---- 工具与记忆目录 ----
+/.codebuddy/

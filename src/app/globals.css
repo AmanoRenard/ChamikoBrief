@@ -1,0 +1,242 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #0F0B1E;
+  --bg-secondary: #1A1530;
+  --bg-card: rgba(255, 255, 255, 0.05);
+  --bg-card-hover: rgba(255, 255, 255, 0.08);
+  --text-primary: #F1F5F9;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.15);
+  --accent: #6366F1;
+  --accent-light: #8B5CF6;
+  --accent-cyan: #06B6D4;
+  --success: #22C55E;
+  --danger: #EF4444;
+  --warning: #F59E0B;
+  --info: #3B82F6;
+  --ring-color: rgba(99, 102, 241, 0.4);
+  --gradient-start: #6366F1;
+  --gradient-end: #06B6D4;
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.06);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(6, 182, 212, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.5);
+}
+
+/* Glass card utility
+ * ⚠️ 过渡只允许作用于配色，绝不能写 `transition: all`：
+ *    transform / opacity 必须完全交给 framer-motion 的内联样式，
+ *    否则两边会对同一属性做二次缓动，动画会出现回跳与"消失一下"。 */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+  border-color: var(--border-hover);
+}
+
+/* 弹层遮罩专用：纯色遮罩层只做透明度动画，不承载任何 filter */
+.scrim {
+  background-color: rgb(0 0 0 / 0.85);
+}
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Focus ring */
+.focus-ring {
+  outline: none;
+}
+
+.focus-ring:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring-color);
+  border-color: var(--accent);
+}
+
+/* Markdown 排版（.md 预览用，纯文本不套用） */
+.md-body {
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.75;
+  word-break: break-word;
+}
+
+.md-body > *:first-child {
+  margin-top: 0;
+}
+
+.md-body h1,
+.md-body h2,
+.md-body h3,
+.md-body h4 {
+  color: var(--text-primary);
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 1.6em 0 0.6em;
+}
+
+.md-body h1 { font-size: 1.5em; }
+.md-body h2 { font-size: 1.25em; }
+.md-body h3 { font-size: 1.1em; }
+.md-body h4 { font-size: 1em; }
+
+.md-body h2 {
+  padding-bottom: 0.35em;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.md-body p,
+.md-body ul,
+.md-body ol,
+.md-body blockquote,
+.md-body table,
+.md-body pre {
+  margin: 0.7em 0;
+}
+
+.md-body ul,
+.md-body ol {
+  padding-left: 1.4em;
+}
+
+.md-body ul { list-style: disc; }
+.md-body ol { list-style: decimal; }
+.md-body li { margin: 0.3em 0; }
+
+.md-body a {
+  color: #A78BFA;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.md-body strong { color: var(--text-primary); }
+
+.md-body code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.88em;
+  padding: 0.15em 0.4em;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #A5B4FC;
+}
+
+.md-body pre {
+  padding: 0.9em 1em;
+  border-radius: 12px;
+  overflow-x: auto;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-color);
+}
+
+.md-body pre code {
+  background: none;
+  padding: 0;
+  color: var(--text-secondary);
+}
+
+.md-body blockquote {
+  padding-left: 0.9em;
+  border-left: 3px solid rgba(99, 102, 241, 0.5);
+  color: var(--text-muted);
+}
+
+.md-body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+
+.md-body th,
+.md-body td {
+  padding: 0.5em 0.75em;
+  border: 1px solid var(--border-color);
+  text-align: left;
+}
+
+.md-body th {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+}
+
+.md-body img {
+  max-width: 100%;
+  border-radius: 10px;
+}
+
+.md-body hr {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 1.5em 0;
+}
+
+/* Mobile touch optimizations */
+button, a {
+  touch-action: manipulation;
+}
