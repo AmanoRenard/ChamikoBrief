@@ -8,6 +8,7 @@ import { formatDate, formatFileSize, getDisplayName } from "@/lib/file-utils";
 import { CopyLinkButton } from "@/components/brief/copy-link-button";
 import { EntryGlyph } from "@/components/brief/entry-glyph";
 import { HighlightedName } from "@/components/brief/highlighted-name";
+import { MetaPill } from "@/components/brief/meta-pill";
 
 interface FileCardProps {
   entry: BriefEntry;
@@ -95,7 +96,8 @@ function FileCardRaw({
           </div>
         )}
 
-        {/* 预览区：4:3，完整图（不裁切）叠在模糊底图上 */}
+        {/* 预览区：4:3，完整图（不裁切）叠在模糊底图上。
+            缩略图悬停放大 4% 会溢出，裁剪由 EntryGlyph 自己的"模糊底图容器"负责（见该文件）。 */}
         <div className="relative aspect-[4/3] bg-white/[0.02] flex items-center justify-center overflow-hidden">
           <EntryGlyph entry={entry} variant="card" />
         </div>
@@ -110,22 +112,38 @@ function FileCardRaw({
               <HighlightedName name={displayName} query={query} />
             </span>
           </p>
-          <div className="mt-1 flex items-center justify-between gap-2 text-[10px] sm:text-[11px] text-slate-500">
-            <span
-              className={`truncate ${entry.missing ? "text-rose-400/80" : ""}`}
-              title={entry.locked ? "引用内不能再进入引用" : entry.shortcut ? `引用 → ${entry.target}` : undefined}
-            >
-              {entry.isFolder
-                ? entry.missing
-                  ? "目标不存在"
-                  : entry.locked
-                    ? "引用 · 不可嵌套"
-                    : entry.shortcut
-                      ? `引用 · ${entry.itemCount ?? 0} 项`
-                      : `${entry.itemCount ?? 0} 项`
-                : `${entry.ext.replace(".", "").toUpperCase() || "文件"} · ${formatFileSize(entry.size)}`}
+          {/* 元信息同样用胶囊分组（与灯箱顶栏同一套 MetaPill）：左侧类型/大小（或项数），右侧日期 */}
+          <div className="mt-1 flex items-center justify-between gap-1.5">
+            <div className="flex min-w-0 items-center gap-1.5">
+              {entry.isFolder ? (
+                <>
+                  <MetaPill
+                    className={entry.missing ? "text-rose-400/80" : ""}
+                    title={
+                      entry.locked
+                        ? "引用内不能再进入引用"
+                        : entry.shortcut
+                          ? `引用 → ${entry.target}`
+                          : undefined
+                    }
+                  >
+                    {entry.missing ? "目标不存在" : entry.shortcut ? "引用" : "文件夹"}
+                  </MetaPill>
+                  {!entry.missing && entry.itemCount != null && (
+                    <MetaPill>{`${entry.itemCount} 项`}</MetaPill>
+                  )}
+                </>
+              ) : (
+                <>
+                  <MetaPill>{entry.ext.replace(".", "").toUpperCase() || "文件"}</MetaPill>
+                  <MetaPill>{formatFileSize(entry.size)}</MetaPill>
+                </>
+              )}
+            </div>
+            {/* 日期不进胶囊（2026-09 用户觉得一起包起来太丑），沿用原来的浅色文字 */}
+            <span className="shrink-0 whitespace-nowrap text-[10px] leading-none text-slate-500 sm:text-[11px]">
+              {formatDate(entry.time)}
             </span>
-            <span className="whitespace-nowrap">{formatDate(entry.time)}</span>
           </div>
         </div>
       </div>

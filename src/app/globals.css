@@ -61,6 +61,22 @@ body::before {
   transition: opacity 0.3s ease;
 }
 
+/* 全局抗色带噪点（2026-09 用户报"功能页背景分层像等高线"）：
+   body::before 的三层 radial-gradient 被放到 200% 铺开，色阶间距大、又是深底低对比，
+   8-bit 屏上必然量化出同心色带。门禁页有自己的噪点层所以看不出来，功能页这几页则没有 ——
+   这里补一层全局的：细噪点把台阶打碎，去饱和避免彩噪，overlay 混入不改变整体亮度。
+   固定定位 + 不参与滚动，只在合成层里，成本可忽略；pointer-events 关掉，绝不挡交互。 */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -83,11 +99,16 @@ body::before {
 /* Glass card utility
  * ⚠️ 过渡只允许作用于配色，绝不能写 `transition: all`：
  *    transform / opacity 必须完全交给 framer-motion 的内联样式，
- *    否则两边会对同一属性做二次缓动，动画会出现回跳与"消失一下"。 */
+ *    否则两边会对同一属性做二次缓动，动画会出现回跳与"消失一下"。
+ * ⚠️ 这里**刻意不写 backdrop-filter**（曾经写过 blur(20px)）：这些玻璃面几乎都放在
+ *    会被 transform 动画的容器里（卡片/列表行的悬停缩放、弹层内容层的 scale），
+ *    而 transform 会给祖先建出新的 backdrop root —— 动画期间背景采样被切断、
+ *    动画一结束又接回来，观感就是「鼠标挪开、卡片缩回去的瞬间，卡片背景忽然亮一下」
+ *    （用户报过）。去掉后材质与"是否在动画中"无关，闪亮消失，也省掉整屏卡片的背景采样。
+ *    这些卡片本来只压在 body::before 的平滑光晕上，模糊不模糊看不出差别；
+ *    弹层真正需要的磨砂感由各自的独立模糊层承担（fixed + backdropFilter，只动画半径）。 */
 .glass-card {
   background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
   border-radius: 16px;
   transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;

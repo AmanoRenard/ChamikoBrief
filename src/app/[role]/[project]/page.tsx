@@ -16,7 +16,8 @@ export function generateMetadata({
   const role = resolveRole(params.role);
   const project = role ? resolveProject(role.name, params.project) : null;
   return {
-    title: role && project ? `${project.name} - ${role.name}` : "狐绘万象",
+    // 角色名放进全角括号：`项目（角色）` —— 避免两个属性用同一个分隔符、读起来分不清层级（2026-09 用户要）
+    title: role && project ? `${project.name}（${role.name}）` : "狐绘万象",
   };
 }
 

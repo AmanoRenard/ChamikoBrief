@@ -16,6 +16,7 @@ import {
 import { buildOfficePreviewUrl, canUseOfficeViewer, downloadFile } from "@/lib/share-url";
 import { useOverlayPresence } from "@/hooks/use-overlay-presence";
 import { useScrollLock } from "@/hooks/useScrollLock";
+import { useImageSize } from "@/hooks/use-image-size";
 
 /* 与其它弹层同一套三层结构：模糊层只动画半径、遮罩层只动画 opacity、
    内容层承担 opacity + scale（该层无任何 filter，玻璃面板是它的静态子节点）。
@@ -60,6 +61,9 @@ export function FileInfoDialog({ entry, onClose, onPreview }: FileInfoDialogProp
   const shown = present;
 
   useScrollLock(!!shown);
+
+  /** 图片才有像素尺寸（文件夹 / 其它类型为 null） */
+  const imageSize = useImageSize(shown && shown.kind === "image" ? shown.href : null);
 
   // 重新打开时恢复可交互
   useEffect(() => {
@@ -198,7 +202,13 @@ export function FileInfoDialog({ entry, onClose, onPreview }: FileInfoDialogProp
           {/* 信息 */}
           <div className="px-4 sm:px-5 py-2">
             <InfoRow label="类型" value={typeText} />
-            <InfoRow label="大小" value={shown.isFolder ? "—" : formatFileSize(shown.size)} />
+            {shown.kind === "image" && (
+              <InfoRow
+                label="尺寸"
+                value={imageSize ? `${imageSize.width} × ${imageSize.height} 像素` : "读取中…"}
+              />
+            )}
+            <InfoRow label="文件大小" value={shown.isFolder ? "—" : formatFileSize(shown.size)} />
             <InfoRow label="加入时间" value={formatDateTime(shown.time)} />
           </div>
 

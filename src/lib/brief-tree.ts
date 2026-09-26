@@ -31,26 +31,50 @@ export function getSubPathParams(): Array<{ role: string; project: string; path:
     }));
 }
 
+/**
+ * URL 参数统一解码后再查树。
+ * Next 传进来的动态参数在中文等场景下是**百分号编码**的（如 "%E5%8F%82…"），
+ * 而树里的 key 是原始中文 —— 不解码会一律 notFound（2026-09 用户报"中文文件夹进不去"）。
+ * 对已经是明文的值（静态导出时 Next 直接用 generateStaticParams 的原始值）是幂等的。
+ */
+export function decodePathParam(value: string): string {
+  if (!value.includes("%")) return value;
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value; // 非法 % 序列：原样返回，交给后续的找不到逻辑
+  }
+}
+
 /** 角色名解析：精确优先，其次大小写不敏感（手输 URL 大小写不严格时更宽容） */
 export function resolveRole(param: string): GateEntry | null {
-  const exact = tree.gates.roles.find((entry) => entry.name === param);
+  const name = decodePathParam(param);
+  const exact = tree.gates.roles.find((entry) => entry.name === name);
   if (exact) return exact;
-  const lower = param.toLowerCase();
+  const lower = name.toLowerCase();
   return tree.gates.roles.find((entry) => entry.name.toLowerCase() === lower) || null;
 }
 
 /** 项目名解析：精确优先，其次大小写不敏感 */
 export function resolveProject(roleName: string, param: string): (GateEntry & { role: string }) | null {
+  const name = decodePathParam(param);
   const list = tree.gates.projects.filter((entry) => entry.role === roleName);
-  const exact = list.find((entry) => entry.name === param);
+  const exact = list.find((entry) => entry.name === name);
   if (exact) return exact;
-  const lower = param.toLowerCase();
+  const lower = name.toLowerCase();
   return list.find((entry) => entry.name.toLowerCase() === lower) || null;
 }
 
 /** 取某个目录的内容；relPath 为空串表示项目根 */
 export function getDir(role: string, project: string, relPath = ""): BriefDir | null {
-  const key = relPath ? `${role}/${project}/${relPath}` : `${role}/${project}/`;
+  // 逐段解码：整串解码会把 "%2F"（若真出现）也还原成 "/"，层级就乱了
+  const decoded = relPath
+    ? relPath
+        .split("/")
+        .map(decodePathParam)
+        .join("/")
+    : "";
+  const key = decoded ? `${role}/${project}/${decoded}` : `${role}/${project}/`;
   return tree.dirs[key] || null;
 }
 

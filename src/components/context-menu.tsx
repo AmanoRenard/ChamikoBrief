@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef } from "react";
 import { Download, ExternalLink, Eye, Info } from "lucide-react";
 import type { BriefEntry } from "@/types/brief";
+import { formatFileSize } from "@/lib/file-utils";
 
 export interface ContextMenuItem {
   icon: React.ReactNode;
@@ -19,9 +20,11 @@ interface ContextMenuProps {
   y: number;
   items: ContextMenuItem[];
   onClose: () => void;
+  /** 可选：在菜单顶部显示这条素材的名字与文件大小；图片不再显示像素尺寸、文件夹/引用不再显示项数（2026-09 用户要） */
+  entry?: BriefEntry | null;
 }
 
-export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
+export function ContextMenu({ x, y, items, onClose, entry }: ContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,6 +64,17 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
           className="absolute inset-0 rounded-xl bg-[#0f0f23]/95 backdrop-blur-xl border border-white/[0.08]"
         />
         <div className="relative py-1.5">
+          {entry && (
+            <div className="px-3.5 pt-1.5 pb-2 mb-1 border-b border-white/[0.06]">
+              <p className="text-xs font-medium text-slate-200 truncate max-w-[240px]">
+                {entry.name}
+              </p>
+              {/* 只留「文件夹 / 文件大小」：图片不再带像素尺寸、文件夹与引用不再带项数（2026-09 用户要） */}
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                {entry.isFolder ? "文件夹" : formatFileSize(entry.size)}
+              </p>
+            </div>
+          )}
           {items.map((item, idx) => (
             <div key={idx}>
               {item.divider && <div className="my-1 border-t border-white/[0.06]" />}

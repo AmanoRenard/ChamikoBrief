@@ -11,6 +11,7 @@
     "prepare-brief": "node scripts/prepare-brief.mjs",
     "times": "node scripts/prepare-brief.mjs --times-only",
     "hooks:install": "git config core.hooksPath .githooks",
+    "push:materials": "node scripts/push-materials.mjs",
     "clean": "node scripts/clean-out.mjs",
     "preview": "npx --yes serve out -l 4000",
     "lint": "next lint"

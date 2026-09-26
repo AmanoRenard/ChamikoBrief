@@ -23,7 +23,7 @@ const SORT_FIELDS: SortBy[] = ["name", "date", "size"];
 
 export function SortTabs({ sortBy, sortOrder, onChange }: SortTabsProps) {
   return (
-    <div className="-mx-2.5 flex items-center gap-0.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="flex items-center gap-0.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {SORT_FIELDS.map((field) => {
         const active = sortBy === field;
         const order = active ? sortOrder : DEFAULT_ORDER[field];
@@ -32,7 +32,6 @@ export function SortTabs({ sortBy, sortOrder, onChange }: SortTabsProps) {
             key={field}
             type="button"
             onClick={() => onChange(field, active ? (order === "asc" ? "desc" : "asc") : DEFAULT_ORDER[field])}
-            title={active ? "再点一次切换顺序" : "按此项排序"}
             className={`flex items-center gap-1 px-2.5 py-1.5 text-[13px] whitespace-nowrap rounded-lg transition-colors cursor-pointer ${
               active
                 ? "text-primary-lighter font-medium bg-primary/10"

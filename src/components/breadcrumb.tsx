@@ -13,12 +13,13 @@ export interface Crumb {
 /** 面包屑：角色 / 项目 / 子目录…，纯链接（无需客户端 JS） */
 /** 可跳转层级的样式（悬停高亮、指针变手型） */
 const LINK_CLASS =
-  "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] transition-all max-w-[220px]";
+  "flex items-center gap-1.5 px-2.5 py-[10px] rounded-xl text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] transition-all max-w-[220px]";
 
 export function Breadcrumb({ items }: { items: Crumb[] }) {
   return (
-    /* -ml-2.5：抵消首个胶囊的 10px 内边距，让面包屑文字与下方分类/排序标签的左边缘对齐 */
-    <nav className="-ml-2.5 flex items-center gap-1.5 flex-wrap min-w-0">
+    /* 不再用负边距抵消首个胶囊的 10px 内边距：2026-09 用户嫌"内容偏左"。
+       现在面包屑 / 分类 / 排序三行的胶囊外框都与下方卡片墙左边缘对齐（文字仍在同一起点）。 */
+    <nav className="flex items-center gap-1.5 flex-wrap min-w-0">
       {items.map((item, index) => {
         const isLast = index === items.length - 1;
         const withHome = index === 0;
@@ -26,7 +27,7 @@ export function Breadcrumb({ items }: { items: Crumb[] }) {
           <div key={`${index}-${item.label}`} className="flex items-center gap-1.5 min-w-0">
             {index > 0 && <ChevronRight size={12} className="text-slate-600 flex-shrink-0" />}
             {isLast ? (
-              <span className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium bg-primary/20 text-primary-light max-w-[220px]">
+              <span className="flex items-center gap-1.5 px-2.5 py-[10px] rounded-xl text-xs font-medium bg-primary/20 text-primary-light max-w-[220px]">
                 {withHome && <Home size={14} className="flex-shrink-0" />}
                 <span className="truncate">{item.label}</span>
               </span>

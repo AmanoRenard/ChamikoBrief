@@ -196,21 +196,47 @@ export function ProjectBrowser({ entries, crumbs }: ProjectBrowserProps) {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-30 bg-surface-dark/95 backdrop-blur-xl border-b border-white/[0.06]">
-        <div className="max-w-[1680px] mx-auto px-3 sm:px-6 lg:px-8 py-2.5">
-          {/* 面包屑 + 搜索 + 视图切换 */}
-          <div className="flex items-center gap-x-3 gap-y-2 flex-wrap">
+        {/* 面包屑带：比下面两行**更深一层**（顶栏底色上叠黑），做出"标题带"的层次（2026-09 用户要）。
+            ⚠️ 底色必须挂在这一层**通栏容器**上（它的宽度 = header 整宽 = 视口宽，不受 max-w 限制），
+            并且**从 header 最顶端开始**（上方不留白）。
+            早先把底色加在内容行上、靠负边距外扩，宽屏时只撑到 1680px 的内容容器、上方还留着
+            6px 没填 —— 用户 2026-09 报"没铺满一整行、上面还有留白"。内容仍由内层 max-w + px 对齐。
+            ⚠️ 上下内边距必须**对称**（`py-2`）：曾经只有 `pt-3`，胶囊上方有 12px、下方是 0，
+            用户 2026-09 报"上面空隙大、下面空隙小"；补齐成对称的 12px 后又说顶栏偏高，
+            所以两侧各压到 8px。 */}
+        <div className="bg-black/25">
+          <div className="max-w-[1680px] mx-auto px-3 sm:px-6 lg:px-8 py-2 flex items-center gap-x-3 gap-y-2 flex-wrap">
             <Breadcrumb items={crumbs} />
             <div className="ml-auto flex items-center gap-2">
-              <SearchBar query={query} onQueryChange={setQuery} />
-              <ViewToggle viewMode={viewMode} onChange={setViewMode} loaded={prefsLoaded} />
+              {/* 手机端（<640px）不显示搜索框：它小屏是 w-full，会把面包屑挤到第二行
+                  （2026-09 用户报"被挤到第二行特别丑"，且他几乎用不到搜索）。桌面端照旧。 */}
+              <div className="hidden sm:block">
+                <SearchBar query={query} onQueryChange={setQuery} />
+              </div>
+              {/* 桌面端：视图切换留在右上角（与搜索框同排） */}
+              <div className="hidden sm:block">
+                <ViewToggle viewMode={viewMode} onChange={setViewMode} loaded={prefsLoaded} />
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* 分类与排序：mt-1 补掉搜索框（36px）比面包屑胶囊（28px）多出的 4px，
-              使「面包屑底 → 分类」与「分类 → 排序」的视觉间距都是 8px */}
-          <div className="mt-1 space-y-2">
+        {/* 分类与排序：pt-2 让「面包屑带底 → 分类」仍是 8px，与「分类 → 排序」的 space-y-2 一致；
+            pb-3 顶替原来外层容器的下内边距（内容位置与改动前完全一致） */}
+        <div className="max-w-[1680px] mx-auto px-3 sm:px-6 lg:px-8 pt-2 pb-3">
+          <div className="space-y-2">
             <CategoryTabs value={filterType} counts={categoryCounts} onChange={setFilterType} />
-            <SortTabs sortBy={sortBy} sortOrder={sortOrder} onChange={handleSortChange} />
+            {/* 手机端：视图切换搬到排序这一行的右端（搜索框已隐藏，右上角留着它会挤面包屑）。
+                SortTabs 内部是 overflow-x-auto，必须套一层 min-w-0 才能在同排正常滚动；
+                ViewToggle 是受控组件，两处渲染共享父级的 viewMode，不会各说各话。 */}
+            <div className="flex items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <SortTabs sortBy={sortBy} sortOrder={sortOrder} onChange={handleSortChange} />
+              </div>
+              <div className="shrink-0 sm:hidden">
+                <ViewToggle viewMode={viewMode} onChange={setViewMode} loaded={prefsLoaded} />
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -225,10 +251,9 @@ export function ProjectBrowser({ entries, crumbs }: ProjectBrowserProps) {
                 <FolderOpen size={34} className="text-slate-600" />
               )}
             </div>
-            <p className="text-slate-400 font-medium">{isSearching ? "没有匹配的条目" : "这个文件夹是空的"}</p>
-            <p className="text-sm text-slate-600 mt-1">
-              {isSearching ? "换个关键词或切换筛选条件" : "把素材放进对应目录后重新构建即可"}
-            </p>
+            {/* 只留一行主文案：空目录与无匹配都去掉下面那行说明小字（2026-09 用户要）；
+                颜色用原来那行小字的 slate-600（比 slate-400 暗一档），免得单独一行太跳 */}
+            <p className="text-slate-600 font-medium">{isSearching ? "没有匹配的文件" : "这个文件夹是空的"}</p>
           </div>
         ) : viewMode === "grid" ? (
           <motion.div
@@ -252,7 +277,15 @@ export function ProjectBrowser({ entries, crumbs }: ProjectBrowserProps) {
         )}
       </main>
 
-      {menu && <ContextMenu x={menu.x} y={menu.y} items={menuItems} onClose={() => setMenu(null)} />}
+      {menu && (
+        <ContextMenu
+          x={menu.x}
+          y={menu.y}
+          items={menuItems}
+          entry={menu.entry}
+          onClose={() => setMenu(null)}
+        />
+      )}
 
       <ImagePreview
         entry={imagePreview}

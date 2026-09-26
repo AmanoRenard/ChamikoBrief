@@ -32,21 +32,34 @@ export interface GateFlowProps {
 /** 每一步的文案与报错（结构沿用约定 28：不出现任何明文名称） */
 const STEP_COPY: Record<
   Step,
-  { label: string; placeholder: string; submit: string; empty: string; notFound: string }
+  {
+    label: string;
+    placeholder: string;
+    submit: string;
+    empty: string;
+    /** 完整报错文案（≥640px 用） */
+    notFound: string;
+    /** 窄屏报错文案（<640px 用）：完整文案在 320px 这类极窄屏会折成两行、把卡片撑高 */
+    notFoundShort: string;
+  }
 > = {
   role: {
     label: "角色名称",
     placeholder: "输入你的角色名",
     submit: "进入",
     empty: "请先写下角色之名。",
-    notFound: "该角色尚未收录至《狐绘万象》，请检查名称或新增角色。",
+    // ⚠️ 报错文案受提示槽限制：完整版要在 ≥640px、短版要在 320px 上都只占一行，
+    // 否则第二行会把提示槽撑高、整张卡片跟着变高（2026-09 用户报）。改文案先按这两个宽度试。
+    notFound: "该角色尚未收录，请检查名称或新增角色。",
+    notFoundShort: "该角色未收录，请检查名称。",
   },
   project: {
     label: "项目名称",
     placeholder: "输入项目名",
     submit: "打开项目",
     empty: "请再报上项目之名。",
-    notFound: "该角色暂无关联的项目，请先创建项目或核对项目名称。",
+    notFound: "该角色暂无此项目，请创建或核对名称。",
+    notFoundShort: "暂无此项目，请核对名称。",
   },
 };
 
@@ -149,7 +162,7 @@ export function GateFlow({
     step === "project" && contextName ? `输入 ${contextName} 的项目名` : copy.placeholder;
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center px-4 py-14">  {/* 站名：模糊渐显 → 定版（reduced-motion 直接显示） */}
+    <main className="relative flex min-h-screen select-none flex-col items-center justify-center px-4 py-14">  {/* 站名：模糊渐显 → 定版（reduced-motion 直接显示） */}
       <motion.h1
         initial={reduced ? false : { opacity: 0, y: 12, filter: "blur(16px)" }}
         animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
@@ -195,12 +208,20 @@ export function GateFlow({
             ) : null}
             {/* 二级页不再有顶部行（返回挪到提交按钮下方、角色名进 placeholder），卡片高度与一级一致 */}
             <form onSubmit={handleSubmit}>
-                  <label
-                    htmlFor="gate-input"
-                    className="mb-1.5 block text-xs font-medium text-slate-400"
-                  >
-                    {copy.label}
-                  </label>
+                  {/* 标签与输入框包一层 group：聚焦时标签随主色点亮、报错时转淡红。
+                      标签仍在抖动容器外 —— 报错时只有输入框抖、标签不动（约定 27）。
+                      pl-[17px] = 输入框的 16px 内边距 + 1px 边框：标签与框内文字左对齐（此前贴着卡片边缘） */}
+                  <div className="group/field">
+                    <label
+                      htmlFor="gate-input"
+                      className={`mb-2.5 block pl-[17px] text-[13px] font-medium transition-colors ${
+                        error
+                          ? "text-red-400/80 group-focus-within/field:text-red-300"
+                          : "text-slate-400 group-focus-within/field:text-primary-light"
+                      }`}
+                    >
+                      {copy.label}
+                    </label>
 
                   <motion.div
                     key={shakeKey}
@@ -237,16 +258,17 @@ export function GateFlow({
                       disabled={busy}
                       aria-invalid={error ? true : undefined}
                       aria-describedby={error ? "gate-error" : undefined}
-                      className={`relative h-12 w-full rounded-xl border bg-white/[0.04] px-4 text-[15px] text-slate-100 outline-none transition-all placeholder:text-slate-600 focus:bg-white/[0.06] disabled:opacity-60 ${
+                      className={`relative h-12 w-full select-text rounded-xl border bg-white/[0.04] px-4 text-[15px] text-slate-100 outline-none transition-all placeholder:text-slate-600 focus:bg-white/[0.06] disabled:opacity-60 ${
                         error
                           ? "border-red-500/50 focus:border-red-500/60 focus:shadow-[0_0_0_4px_rgba(239,68,68,0.12)]"
                           : "border-white/[0.08] focus:border-primary/50 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.14)]"
                       }`}
                     />
                   </motion.div>
+                  </div>
 
                   {/* 提示槽：固定 20px 一行高、上下各留 8px 呼吸，槽内垂直居中 ——
-                      静默与报错时卡片高度都不变；只有窄屏两行文案才会略增 */}
+                      静默与报错时卡片高度都不变。前提是报错文案在最窄屏也只占一行（见 STEP_COPY）。 */}
                   <div className="mt-2 flex min-h-[20px] items-center">
                     <AnimatePresence>
                       {error ? (
@@ -263,11 +285,20 @@ export function GateFlow({
                             initial={reduced ? false : { scale: 0.5, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ type: "spring", stiffness: 500, damping: 22, delay: 0.06 }}
-                            className="shrink-0"
+                            /* flex 不能少：图标是 inline 的 svg，放在普通 span 里会按**基线**对齐，
+                               中心比文字高约 2px（2026-09 用户报）。让它成为 flex item 才会真正居中。 */
+                            className="flex shrink-0"
                           >
                             <CircleAlert size={14} />
                           </motion.span>
-                          <span id="gate-error">{error}</span>
+                          {/* 报错文案分两档：窄屏（<640px）用短版，否则第二行会把提示槽撑高 ——
+                              提示槽只预留了一行（见 STEP_COPY 的字数约束） */}
+                          <span id="gate-error">
+                            <span className="sm:hidden">
+                              {errorKind === "notFound" ? copy.notFoundShort : error}
+                            </span>
+                            <span className="hidden sm:inline">{error}</span>
+                          </span>
                         </motion.p>
                       ) : null}
                     </AnimatePresence>

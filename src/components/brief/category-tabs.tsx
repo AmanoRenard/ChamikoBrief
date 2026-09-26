@@ -21,7 +21,7 @@ const CATEGORY_OPTIONS: Array<{ value: FilterType; label: string }> = [
 /** B站式分类标签：文字 + 数量，激活项主色文字与 2px 下划线，窄屏横向可滚 */
 export function CategoryTabs({ value, counts, onChange }: CategoryTabsProps) {
   return (
-    <div className="-mx-2.5 flex items-center gap-0.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="flex items-center gap-0.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {CATEGORY_OPTIONS.map((option) => {
         const active = value === option.value;
         return (

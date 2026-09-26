@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProjectBrowser } from "@/components/brief/project-browser";
 import type { Crumb } from "@/components/breadcrumb";
-import { getDir, getSubPathParams, resolveProject, resolveRole, toEntries } from "@/lib/brief-tree";
+import { decodePathParam, getDir, getSubPathParams, resolveProject, resolveRole, toEntries } from "@/lib/brief-tree";
 import { encodePathSegment } from "@/lib/share-url";
 
 export function generateStaticParams() {
@@ -19,7 +19,9 @@ export function generateMetadata({
   return {
     title:
       role && project
-        ? `${params.path.join("/")} - ${project.name} - ${role.name}`
+        // 参数可能是百分号编码的（中文目录），标题要显示明文。
+        // 层级用「子目录 - 项目（角色）」：只有一个破折号，角色名进全角括号（2026-09 用户要）
+        ? `${params.path.map(decodePathParam).join("/")} - ${project.name}（${role.name}）`
         : "狐绘万象",
   };
 }
@@ -36,7 +38,9 @@ export default function SubDirectoryPage({
   const project = resolveProject(role.name, params.project);
   if (!project) notFound();
 
-  const relPath = params.path.join("/");
+  // 参数可能是百分号编码的（中文目录）：先统一解码成明文，后面查目录、拼面包屑与链接都用它
+  const segments = params.path.map(decodePathParam);
+  const relPath = segments.join("/");
   const dir = getDir(role.name, project.name, relPath);
   if (!dir) notFound();
 
@@ -45,9 +49,10 @@ export default function SubDirectoryPage({
   const crumbs: Crumb[] = [
     { label: role.name, href: `${base}/` },
     { label: project.name, href: `${base}/` },
-    ...params.path.map((segment, index) => ({
+    // 用解码后的明文做 label 与链接：拿编码值去 encodePathSegment 会把 "%" 再编成 "%25"（双重编码）
+    ...segments.map((segment, index) => ({
       label: segment,
-      href: `${base}/${params.path
+      href: `${base}/${segments
         .slice(0, index + 1)
         .map(encodePathSegment)
         .join("/")}/`,
